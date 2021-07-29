@@ -1,0 +1,145 @@
+= Setup
+include::_attributes.adoc[]
+
+[#prerequisite]
+== Prerequisite CLI tools
+
+You will need in this tutorial:
+
+include::https://raw.githubusercontent.com/redhat-developer-demos/rhd-tutorial-common/master/prerequisites-kubernetes.adoc[]
+
+| `istioctl`
+| https://github.com/istio/istio/releases/download/{istio-version}/istio-{istio-version}-osx.tar.gz[Download]
+| https://github.com/istio/istio/releases/download/{istio-version}/istio-{istio-version}-win.zip[Download]
+| https://github.com/istio/istio/releases/download/{istio-version}/istio-{istio-version}-linux.tar.gz[Download]
+|===
+
+include::https://raw.githubusercontent.com/redhat-developer-demos/rhd-tutorial-common/master/optional-requisites.adoc[]
+|===
+
+[#download-tutorial-sources]
+== Download Tutorial Sources
+
+Before we start setting up the environment, let's clone the tutorial sources and set the `TUTORIAL_HOME` environment variable to point to the root directory of the tutorial:
+
+:tutorial-url: https://github.com/redhat-developer-demos/istio-tutorial
+:folder: istio-tutorial
+include::https://raw.githubusercontent.com/redhat-developer-demos/rhd-tutorial-common/master/download-sources.adoc[]
+
+[#install-minikube]
+=== Install Minikube
+
+include::https://raw.githubusercontent.com/redhat-developer-demos/rhd-tutorial-common/master/install-minikube.adoc[]
+
+[#start-kubernetes]
+=== Start Kubernetes
+
+There are series of commands as steps that allows you get started with minikube. The following section shows how to start minikube with minimal and required configurations:
+
+:profile: istio-devnation
+include::https://raw.githubusercontent.com/redhat-developer-demos/rhd-tutorial-common/master/kubernetes-setup.adoc[]
+
+
+[#upstreamistioinstallation]
+== Istio Installation
+
+[tabs, subs="attributes+,+macros"]	
+====
+Minikube::
++
+--
+[source,bash,subs="attributes+,+macros"]
+----
+#!/bin/bash
+
+# Mac OS:
+curl -L https://github.com/istio/istio/releases/download/{istio-version}/istio-{istio-version}-osx.tar.gz | tar xz
+
+# Fedora/RHEL:
+curl -L https://github.com/istio/istio/releases/download/{istio-version}/istio-{istio-version}-linux.tar.gz | tar xz
+
+# Windows
+curl -L https://github.com/istio/istio/releases/download/{istio-version}/istio-{istio-version}-win.zip
+
+# Both:
+cd istio-{istio-version}
+export ISTIO_HOME=`pwd`
+export PATH=$ISTIO_HOME/bin:$PATH
+cd $TUTORIAL_HOME
+----
+
+[.console-input]
+[source,bash,subs="attributes+,+macros"]
+----
+istioctl manifest apply --set profile=demo --set values.global.proxy.privileged=true --set meshConfig.outboundTrafficPolicy.mode=ALLOW_ANY
+----
+
+[.console-output]
+[source,bash,subs="attributes+,+macros"]
+----
+✔ Istio core installed
+✔ Istiod installed
+✔ Egress gateways installed
+✔ Ingress gateways installed
+✔ Addons installed
+✔ Installation complete
+----
+
+[.console-input]
+[source,bash,subs="attributes+,+macros"]
+----
+kubectl config set-context $(kubectl config current-context) --namespace=istio-system
+----
+
+IMPORTANT: `istio-demo.yaml` enables policy enforcement by default which is required in some sections of the tutorial. Please refer to https://istio.io/docs/tasks/policy-enforcement/enabling-policy/ if you are not using this file.
+
+Wait for Istio's components to be ready
+
+[.console-input]
+[source,bash,subs="attributes+,+macros"]
+----
+kubectl get pods -w
+----
+
+[.console-output]
+[source,bash,subs="attributes+,+macros"]
+----
+NAME                                        READY     STATUS      RESTARTS   AGE
+grafana-b54bb57b9-wdtw6                1/1     Running   0          79s
+istio-egressgateway-68587b7b8b-qzz8x   1/1     Running   0          79s
+istio-ingressgateway-55bdff67f-t97xd   1/1     Running   0          79s
+istio-tracing-9dd6c4f7c-mvwnz          1/1     Running   0          79s
+istiod-76bf8475c-cnkvn                 1/1     Running   0          101s
+kiali-d45468dc4-kslcb                  1/1     Running   0          78s
+prometheus-74d44d84db-j22tf            2/2     Running   0          78s
+----
+--
+OpenShift::
++
+--
+Istio is supported in OpenShift by Red Hat OpenShift Service Mesh operator.
+
+To install it, you need to follow the instructions written in: https://docs.openshift.com/container-platform/4.6/service_mesh/v2x/installing-ossm.html
+
+It is important that after you finish with the installation, all the required pods are delpyed in `istio-system` namespace:
+
+[.console-input]
+[source,bash,subs="attributes+,+macros"]
+----
+kubectl get pods -w
+----
+
+[.console-output]
+[source,bash,subs="attributes+,+macros"]
+----
+NAME                                     READY   STATUS             RESTARTS   AGE
+grafana-77c8d875c6-blrtn               2/2     Running   0          57m
+istio-egressgateway-69f57c4784-8ph2c   1/1     Running   0          57m
+istio-ingressgateway-fb75588cc-fvmzg   1/1     Running   0          57m
+istiod-basic-6d6cb9d7bb-8dvl7          1/1     Running   0          58m
+jaeger-c78d79786-hmm7q                 2/2     Running   0          57m
+kiali-774f655f6c-sv7nv                 1/1     Running   0          18m
+prometheus-9db548fb6-vhwhc             3/3     Running   0          57m
+----
+--
+====
