@@ -1,6 +1,8 @@
 # istio-workshop
 
 ## Installing Redhat Service Mesh
+This is an extract from Redhat official document. A quick way to get service mesh up and runnning. For more detail document please refer to
+[Installing Openshift Service Mesh](https://docs.openshift.com/container-platform/4.7/service_mesh/v2x/ossm-about.html)
 
 ## Install Elastic Search
 
