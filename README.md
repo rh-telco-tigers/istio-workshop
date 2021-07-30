@@ -201,3 +201,40 @@ To install Jaeger you use the OperatorHub to install the Jaeger Operator. By def
 11. Click on istio-system project you will see pods running there
 
     ![Istio Complete](https://github.com/rh-telco-tigers/istio-workshop/blob/main/images/istio-complete.png)
+    
+# Appendix
+Configure cluster logging instance without persistent storage. Incase persistent storage is not available in your environment you can use following yaml template to create instance without presitent storage
+
+```yaml
+apiVersion: "logging.openshift.io/v1"
+kind: "ClusterLogging"
+metadata:
+  name: "instance" 
+  namespace: "openshift-logging"
+spec:
+  managementState: "Managed"  
+  logStore:
+    type: "elasticsearch"  
+    retentionPolicy: 
+      application:
+        maxAge: 1d
+      infra:
+        maxAge: 7d
+      audit:
+        maxAge: 7d
+    elasticsearch:
+      nodeCount: 3 
+      storage: {}.  # <--- no storage
+  visualization:
+    type: "kibana"  
+    kibana:
+      replicas: 1
+  curation:
+    type: "curator"
+    curator:
+      schedule: "30 3 * * *" 
+  collection:
+    logs:
+      type: "fluentd"  
+      fluentd: {}
+```      
